@@ -1,52 +1,50 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.ConnectException;
 import java.net.Socket;
-import java.util.Scanner;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 public class Client {
-    public static <writer> void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+    static final int PORT = 10521;
+    static Encryption enc = new Encryption();
+    static PublicKey serverPublicKey;
+    static PublicKey selfPublicKey;
+    static PrivateKey selfPrivateKey;
 
+    static Socket socket;
 
-        String loggin;
-        String password;
-        String phoneNumber;
-        String email;
-
-        System.out.print("Loggin: ");
-        loggin = scanner.nextLine();
-
-        System.out.print("Password: ");
-        password = scanner.nextLine();
-
-        System.out.print("Phone number: ");
-        phoneNumber = scanner.nextLine();
-
-        System.out.print("Email: ");
-        email = scanner.nextLine();
-
+    public static void main(String[] args) {
+        selfPrivateKey = enc.getPrivateKey();
+        selfPublicKey = enc.getPublicKey();
 
         try {
-            Socket socket = new Socket("localhost", 3447);
-            ObjectOutputStream writer = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream reader = new ObjectInputStream(socket.getInputStream());
+            socket = new Socket(
+                    "localhost",
+                    PORT);
 
-            Package p = new RegistrationPackage(
-                    PackageType.REGISTRATION,
-                    loggin,
-                    password,
-                    phoneNumber,
-                    email
-            );
-
-            writer.writeObject(p);
-            writer.flush();
-
-        } catch (Exception e) {
+            System.out.println("Connected to server");
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
+        try {
+            exchangeKeys();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    static void exchangeKeys() throws IOException, ClassNotFoundException {
+        ObjectOutputStream writer = new ObjectOutputStream(socket.getOutputStream());
+        ObjectInputStream reader = new ObjectInputStream(socket.getInputStream());
+        writer.writeObject(selfPublicKey);
+        writer.flush();
+
+        serverPublicKey = (PublicKey) reader.readObject();
+        System.out.println("Client public key: " + serverPublicKey);
+
 
     }
 }

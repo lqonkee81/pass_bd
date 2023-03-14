@@ -7,8 +7,8 @@
 import java.sql.*;
 
 public class DataBaseHandler {
-
     private Connection co;
+
     private String pathDbFile;
 
     DataBaseHandler(String pathDbFile) {
@@ -20,7 +20,7 @@ public class DataBaseHandler {
 
             String request = " CREATE TABLE IF NOT EXISTS users (\n " +
                     " id INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-                    " loggin TEXT NOT NULL,\n" +
+                    " login TEXT NOT NULL,\n" +
                     " password TEXT NOT NULL,\n" +
                     " phone_number TEXT,\n" +
                     " email TEXT\n" +

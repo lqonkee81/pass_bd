@@ -15,5 +15,6 @@ public enum PackageType {
     AUTHORIZATION,
     ADD_AUTHORIZE_DATA,
     DELETE_AUTHORIZE_DATA,
-    SERVICE
+    SERVICE,
+    ENCRYPTION
 }
