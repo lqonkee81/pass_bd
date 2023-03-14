@@ -7,7 +7,7 @@
     </content>
     <orderEntry type="jdk" jdkName="19 (2)" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Message" exported="" />
+    <orderEntry type="module" module-name="Package" exported="" />
     <orderEntry type="module" module-name="DataBase" exported="" />
   </component>
 </module>
