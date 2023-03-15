@@ -3,14 +3,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
-
-    private final int PORT = 10521;  // Порт, на котором работает сервер
     private ServerSocket sSocket;
-    private final String pathDbFile = "DataBase/users.db";
-    DataBaseHandler dataBaseHandler = new DataBaseHandler(pathDbFile);
 
     Server() {
         try {
+            // Порт, на котором работает сервер
+            int PORT = 9999;
             sSocket = new ServerSocket(PORT);
             System.out.println("Server started on port: " + PORT);
         } catch (IOException e) {

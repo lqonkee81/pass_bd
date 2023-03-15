@@ -1,43 +1,105 @@
 import java.io.*;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Scanner;
 
 public class Client {
-    static final int PORT = 10521;
-    static Encryption enc = new Encryption();
-    static PublicKey serverPublicKey;
-    static PublicKey selfPublicKey;
-    static PrivateKey selfPrivateKey;
+    private final int PORT = 9999;
 
-    static Socket socket;
+    Encryption enc;
 
-    public static void main(String[] args) {
-        selfPrivateKey = enc.getPrivateKey();
-        selfPublicKey = enc.getPublicKey();
+    private PublicKey serverPublicKey;
+    private PublicKey selfPublicKey;
+    private PrivateKey selfPrivateKey;
+
+    private Socket socket;
+    private ObjectOutputStream writer;
+    private ObjectInputStream reader;
+
+    Scanner sc;
+
+    public Client() {
+        this.sc = new Scanner(System.in);
+
+        this.enc = new Encryption();
+        this.selfPublicKey = enc.getPublicKey();
+        this.selfPrivateKey = enc.getPrivateKey();
 
         try {
-            socket = new Socket(
+            this.socket = new Socket(
                     "localhost",
-                    PORT);
+                    PORT
+            );
 
-            System.out.println("Connected to server");
+            this.writer = new ObjectOutputStream(socket.getOutputStream());
+            this.reader = new ObjectInputStream(socket.getInputStream());
+
+        } catch (UnknownHostException e) {
+            System.err.println("Server is not avaliable");
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+
+    public void run() {
+        /*
+         * Стартовая точка работы клиента
+         * */
+
+        // Обмен публичными ключами с сервером
         try {
             exchangeKeys();
-            registration();
         } catch (Exception e) {
+            System.err.println("Cannot echange public keys");
             e.printStackTrace();
         }
 
+        // Авторизация на сервере
+        authorize();
     }
 
-    static void exchangeKeys() throws IOException, ClassNotFoundException {
-        ObjectOutputStream writer = new ObjectOutputStream(socket.getOutputStream());
-        ObjectInputStream reader = new ObjectInputStream(socket.getInputStream());
+    private boolean checkResponse() {
+        PackageType responseType = recievePackage().getType();
+
+        if (responseType.equals(PackageType.SERVICE_ACCEPT)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private Package recievePackage() {
+        try {
+            SendingPackage p = (SendingPackage) reader.readObject();
+            Package pac = enc.decrypt(p.getData(), selfPrivateKey);
+
+            return pac;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new Package(PackageType.SERVICE_ERROR);
+    }
+
+    private void sendPackage(Package pac) throws Exception {
+        byte[] sendingPackage = enc.encrypt(pac, serverPublicKey);
+
+        SendingPackage p = new SendingPackage(sendingPackage);
+        writer.writeObject(p);
+        writer.flush();
+    }
+
+    private void exchangeKeys() throws IOException, ClassNotFoundException {
+        /*
+         * Обмен ключами с сервером
+         *
+         * Сначала клиент отправляет свой ключ,
+         * затем принимает ключ сервера
+         * */
+
         writer.writeObject(selfPublicKey);
         writer.flush();
 
@@ -45,21 +107,80 @@ public class Client {
         System.out.println("Client public key: " + serverPublicKey);
     }
 
-    static void registration() throws Exception {
-        BufferedOutputStream writer = new BufferedOutputStream(socket.getOutputStream());
-        BufferedInputStream reader = new BufferedInputStream(socket.getInputStream());
+    private void authorize() {
+        /*
+         * Авторизация в приложении
+         *
+         * Либо регистрация
+         * Либо вход в уже сущесвтующий аккаунт
+         * */
 
-        RegistrationPackage pac = new RegistrationPackage(
-                PackageType.REGISTRATION,
-                "lqonkee81",
-                "kke",
-                "484",
-                "lqonkee81@yandex.ru"
+        int choice;
+
+        System.out.println("ВЫберите действие: ");
+        System.out.println("1. Авторизация");
+        System.out.println("2. Регистрация");
+
+        System.out.print("\n>: ");
+        choice = sc.nextInt();
+
+        switch (choice) {
+            case 1:
+                break;
+
+            case 2:
+                try {
+                    registration();
+                } catch (Exception e) {
+                    System.out.println("При регистрации произошла ошибка!");
+                    e.printStackTrace();
+                }
+                break;
+
+            default:
+                System.out.println("Нет такого действия");
+        }
+    }
+
+    private void registration() throws Exception {
+        /*
+         * Регистрация нового аккаунта
+         * */
+
+        String login;
+        String password;
+        String phoneNumber;
+        String email;
+
+        System.out.print("Введите логин: ");
+        login = sc.next();
+
+        System.out.print("Введите пароль: ");
+        password = sc.next();
+
+        System.out.print("Введите номер телефона: ");
+        phoneNumber = sc.next();
+
+        System.out.print("Введите электронную почту: ");
+        email = sc.next();
+
+        RegistrationPackage rgp = new RegistrationPackage(
+                login,
+                password,
+                phoneNumber,
+                email
         );
 
-        byte[] p = enc.encrypt(pac, serverPublicKey);
+        byte[] sendPackage = enc.encrypt(rgp, serverPublicKey);
 
-        writer.write(p);
+        SendingPackage p = new SendingPackage(sendPackage);
+        writer.writeObject(p);
         writer.flush();
+
+        if (checkResponse()) {
+            System.out.println("Регистрация прошла успешно!");
+        } else {
+            System.err.println("Ошибка при регистрации");
+        }
     }
 }
