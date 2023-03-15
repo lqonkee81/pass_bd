@@ -1,6 +1,4 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -30,7 +28,8 @@ public class Client {
 
         try {
             exchangeKeys();
-        } catch (IOException | ClassNotFoundException e) {
+            registration();
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -44,7 +43,23 @@ public class Client {
 
         serverPublicKey = (PublicKey) reader.readObject();
         System.out.println("Client public key: " + serverPublicKey);
+    }
 
+    static void registration() throws Exception {
+        BufferedOutputStream writer = new BufferedOutputStream(socket.getOutputStream());
+        BufferedInputStream reader = new BufferedInputStream(socket.getInputStream());
 
+        RegistrationPackage pac = new RegistrationPackage(
+                PackageType.REGISTRATION,
+                "lqonkee81",
+                "kke",
+                "484",
+                "lqonkee81@yandex.ru"
+        );
+
+        byte[] p = enc.encrypt(pac, serverPublicKey);
+
+        writer.write(p);
+        writer.flush();
     }
 }

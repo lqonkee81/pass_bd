@@ -13,8 +13,11 @@ public class ClientHandler implements Runnable {
     private final PublicKey selfPublickKey;
     private final PrivateKey selfPrivateKey;
 
-//    private ObjectOutputStream writer;
-//    private ObjectInputStream reader;
+    private ObjectOutputStream objectWriter;
+    private ObjectInputStream objectReader;
+
+    private BufferedOutputStream bytesWriter;
+    private BufferedInputStream bytesReader;
 
     public ClientHandler(Socket socket, Server server) {
         System.out.println("Client has been connected!");
@@ -26,19 +29,21 @@ public class ClientHandler implements Runnable {
 
         this.selfPublickKey = enc.getPublicKey();
         this.selfPrivateKey = enc.getPrivateKey();
+
+        try {
+            this.objectWriter = new ObjectOutputStream(socket.getOutputStream());
+            this.objectReader = new ObjectInputStream(socket.getInputStream());
+
+            this.bytesWriter = new BufferedOutputStream(socket.getOutputStream());
+            this.bytesReader = new BufferedInputStream(socket.getInputStream());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void listener() {
-//        Package pack = packageHandler();
-
-        Package pack = new Package(PackageType.SERVICE);
-
-//        try {
-//            pack = (Package) reader.readObject();
-//
-//        } catch (IOException | ClassNotFoundException e) {
-//            e.printStackTrace();
-//        }
+        Package pack = packageHandler();
 
         PackageType type = pack.getType();
         switch (type) {
@@ -66,19 +71,15 @@ public class ClientHandler implements Runnable {
     }
 
     private Package packageHandler() {
-        Package pac = null;
-//        try (
-//                BufferedInputStream reader = new BufferedInputStream(socket.getInputStream());
-//                BufferedOutputStream writer = new BufferedOutputStream(socket.getOutputStream())
-//        ) {
-//            byte[] pac_bytes = reader.readAllBytes();
-//            pac = enc.decrypt(pac_bytes, selfPrivateKey);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        try {
 
-        return pac;
+            byte[] pac_bytes = bytesReader.readAllBytes();
+            return enc.decrypt(pac_bytes, selfPrivateKey);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new Package(PackageType.SERVICE);
     }
 
     private void exchangeKeys() {
@@ -89,15 +90,12 @@ public class ClientHandler implements Runnable {
          * затем отправляет клиенту свой
          * */
 
-        try (
-                ObjectOutputStream writer = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream reader = new ObjectInputStream(socket.getInputStream());
-        ) {
-            userPublicKey = (PublicKey) reader.readObject();
+        try {
+            userPublicKey = (PublicKey) objectReader.readObject();
             System.out.println("Client public key: " + userPublicKey);
 
-            writer.writeObject(selfPublickKey);
-            writer.flush();
+            objectWriter.writeObject(selfPublickKey);
+            objectWriter.flush();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -107,6 +105,6 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         exchangeKeys();
-//        listener();
+        listener();
     }
 }
