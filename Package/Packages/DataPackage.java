@@ -5,12 +5,20 @@ public class DataPackage extends Package implements Serializable {
     private String login;
     private String password;
 
-    DataPackage(String url, String login, String password) {
-        super(PackageType.ADD_AUTHORIZE_DATA);
+    DataPackage(String url, String login, String password, PackageType type) {
+        super(type);
 
         this.url = url;
         this.login = login;
         this.password = password;
+    }
+
+    DataPackage(String url, PackageType type) {
+        super(type);
+
+        this.url = url;
+        this.login = null;
+        this.password = null;
     }
 
     public String getUrl() {

@@ -220,32 +220,68 @@ public class Client {
         System.out.print(">: ");
         choice = sc.nextInt();
 
-        if (choice == 1) {
-            String url;
-            String login;
-            String password;
+        switch (choice) {
+            case 1:
+                addAuthorizeData();
 
-            System.out.println("Введите url: ");
-            url = sc.next();
+            case 2:
+                delAuthorizeData();
+        }
+    }
 
-            System.out.println("Введите логин: ");
-            login = sc.next();
+    private void addAuthorizeData() {
+        String url;
+        String login;
+        String password;
 
-            System.out.println("Введите пароль: ");
-            password = sc.next();
+        System.out.println("Введите url: ");
+        url = sc.next();
 
-            DataPackage pack = new DataPackage(
-                    url,
-                    login,
-                    password
-            );
+        System.out.println("Введите логин: ");
+        login = sc.next();
 
-            try {
-                System.out.println("sending...");
-                sendPackage(pack);
-            } catch (Exception e) {
-                e.printStackTrace();
+        System.out.println("Введите пароль: ");
+        password = sc.next();
+
+        DataPackage pack = new DataPackage(
+                url,
+                login,
+                password,
+                PackageType.ADD_AUTHORIZE_DATA
+        );
+
+        try {
+            sendPackage(pack);
+
+            if (checkResponse()) {
+                System.out.println("Добавлено!");
+            } else {
+                System.err.println("Какая-то ошибка");
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void delAuthorizeData() {
+        String del_url;
+
+        System.out.println("Введите url: ");
+        del_url = sc.next();
+
+        DataPackage pack = new DataPackage(del_url, PackageType.DELETE_AUTHORIZE_DATA);
+
+        try {
+            sendPackage(pack);
+
+            if (checkResponse()) {
+                System.out.println("Сделано!");
+            } else {
+                System.err.println("Что-то пошло не так");
+            }
+        } catch (Exception e) {
+            System.err.println("Что-то пошло не так");
         }
     }
 }

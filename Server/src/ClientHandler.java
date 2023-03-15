@@ -100,6 +100,14 @@ public class ClientHandler implements Runnable {
                     }
                     break;
 
+                case DELETE_AUTHORIZE_DATA:
+                    if (isAuthorized) {
+                        DataPackage dadp = (DataPackage) pack;
+                        System.out.println(dadp);
+
+                        delAuthorizeData(dadp.getUrl());
+                    }
+
                 default:
                     try {
                         Thread.sleep(300);
@@ -117,7 +125,7 @@ public class ClientHandler implements Runnable {
 
             return pac;
 
-        } catch (SocketException e) {
+        } catch (SocketException | EOFException e) {
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -183,6 +191,20 @@ public class ClientHandler implements Runnable {
                     login,
                     password
             );
+            sendPackage(new PackageAccept());
+
+        } catch (SQLException e) {
+            sendPackage(new PackageError());
+            e.printStackTrace();
+        }
+    }
+
+    private void delAuthorizeData(String url) {
+        PasswordDBHandler dbHand = new PasswordDBHandler(this.login);
+
+        try {
+            dbHand.deleteRow(url);
+            sendPackage(new PackageAccept());
         } catch (SQLException e) {
             sendPackage(new PackageError());
             e.printStackTrace();

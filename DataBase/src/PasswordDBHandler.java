@@ -45,4 +45,12 @@ public class PasswordDBHandler {
         Statement statement = connection.createStatement();
         statement.executeUpdate(responce);
     }
+
+    public void deleteRow(String url) throws SQLException {
+        String request = "DELETE FROM data WHERE url = ?;";
+
+        PreparedStatement statement = connection.prepareStatement(request);
+        statement.setString(1, url);
+        statement.executeUpdate();
+    }
 }
