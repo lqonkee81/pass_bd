@@ -6,6 +6,7 @@
 
 import javax.crypto.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 
 public class Encryption {
@@ -52,6 +53,17 @@ public class Encryption {
     }
 
 
+    public String makeHash(String pass) throws NoSuchAlgorithmException {
+        MessageDigest md5 = MessageDigest.getInstance("MD5");
+
+        byte[] bytes = md5.digest(pass.getBytes());
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (byte b : bytes) {
+            stringBuilder.append(String.format("%02X", b));
+        }
+        return stringBuilder.toString();
+    }
 
 
     public PublicKey getPublicKey() {

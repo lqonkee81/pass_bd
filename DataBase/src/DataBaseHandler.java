@@ -5,6 +5,7 @@
  * */
 
 import java.sql.*;
+import java.util.Locale;
 
 public class DataBaseHandler {
     private Connection co;
@@ -42,5 +43,23 @@ public class DataBaseHandler {
 
         Statement statement = co.createStatement();
         statement.executeUpdate(response);
+    }
+
+    public synchronized boolean checkUser(String login, String password) throws SQLException {
+        String request = "SELECT login, password FROM users WHERE login = ?;')";
+
+        PreparedStatement ps = co.prepareStatement(request);
+        ps.setString(1, login);
+
+        ResultSet result = ps.executeQuery();
+
+        String responce_login = result.getString("login");
+        String responce_password = result.getString("password");
+
+        if (responce_login.equals(login) && responce_password.equals(password)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

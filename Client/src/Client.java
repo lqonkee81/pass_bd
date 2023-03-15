@@ -126,6 +126,7 @@ public class Client {
 
         switch (choice) {
             case 1:
+                authorization();
                 break;
 
             case 2:
@@ -171,16 +172,37 @@ public class Client {
                 email
         );
 
-        byte[] sendPackage = enc.encrypt(rgp, serverPublicKey);
-
-        SendingPackage p = new SendingPackage(sendPackage);
-        writer.writeObject(p);
-        writer.flush();
+        sendPackage(rgp);
 
         if (checkResponse()) {
             System.out.println("Регистрация прошла успешно!");
         } else {
             System.err.println("Ошибка при регистрации");
+        }
+    }
+
+    private void authorization() {
+        String login;
+        String password;
+
+        System.out.println("Введите логин: ");
+        login = sc.next();
+
+        System.out.println("Введите пароль: ");
+        password = sc.next();
+
+        AuthorizationPackage pack = new AuthorizationPackage(login, password);
+
+        try {
+            sendPackage(pack);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (checkResponse()) {
+            System.out.println("Все крута, ты уже там есть");
+        } else {
+            System.err.println("Что-то пошло не так");
         }
     }
 }

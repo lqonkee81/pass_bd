@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.sql.SQLException;
@@ -15,6 +16,9 @@ public class ClientHandler implements Runnable {
     private ObjectInputStream objectReader;
 
     private DataBaseHandler dbHandler;
+    private PasswordDBHandler passwordsDB;
+
+    private String login;
 
     public ClientHandler(Socket socket, Server server) {
         System.out.println("Client has been connected!");
@@ -71,12 +75,11 @@ public class ClientHandler implements Runnable {
                 break;
 
             case AUTHORIZATION:
+                AuthorizationPackage autPack = (AuthorizationPackage) pack;
+                autorization(autPack);
                 break;
 
             case ADD_AUTHORIZE_DATA:
-                break;
-
-            case DELETE_AUTHORIZE_DATA:
                 break;
 
             default:
@@ -115,16 +118,37 @@ public class ClientHandler implements Runnable {
         try {
             dbHandler.addUser(
                     rgp.getLoggin(),
-                    rgp.getPassword(),
+                    enc.makeHash(rgp.getPassword()),
                     rgp.getPhoneNumber(),
                     rgp.getEmail()
             );
+            this.login = rgp.getLoggin();
 
             sendPackage(new PackageAccept());
 
-        } catch (SQLException e) {
+        } catch (SQLException | NoSuchAlgorithmException e) {
             sendPackage(new PackageError());
             e.printStackTrace();
         }
+    }
+
+    private void autorization(AuthorizationPackage pack) {
+        try {
+            String hashedPassword = enc.makeHash(pack.getPassword());
+
+            if (dbHandler.checkUser(pack.getLogin(), hashedPassword)) {
+                sendPackage(new PackageAccept());
+            } else {
+                sendPackage(new PackageError());
+            }
+        } catch (SQLException | NoSuchAlgorithmException e) {
+            sendPackage(new PackageError());
+            e.printStackTrace();
+        }
+    }
+
+    private void addAutorizationData(String url, String login, String password) {
+        PasswordDBHandler dbHand = new PasswordDBHandler(this.login);
+
     }
 }
