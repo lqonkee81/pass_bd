@@ -33,8 +33,8 @@ public class Client {
                     PORT
             );
 
-            this.writer = new ObjectOutputStream(socket.getOutputStream());
             this.reader = new ObjectInputStream(socket.getInputStream());
+            this.writer = new ObjectOutputStream(socket.getOutputStream());
 
         } catch (UnknownHostException e) {
             System.err.println("Server is not avaliable");
@@ -176,6 +176,7 @@ public class Client {
 
         if (checkResponse()) {
             System.out.println("Регистрация прошла успешно!");
+            mainLoop();
         } else {
             System.err.println("Ошибка при регистрации");
         }
@@ -185,10 +186,10 @@ public class Client {
         String login;
         String password;
 
-        System.out.println("Введите логин: ");
+        System.out.print("Введите логин: ");
         login = sc.next();
 
-        System.out.println("Введите пароль: ");
+        System.out.print("Введите пароль: ");
         password = sc.next();
 
         AuthorizationPackage pack = new AuthorizationPackage(login, password);
@@ -200,9 +201,51 @@ public class Client {
         }
 
         if (checkResponse()) {
-            System.out.println("Все крута, ты уже там есть");
+            System.out.println("Все крута. Добро пожаловать!");
+            mainLoop();
         } else {
             System.err.println("Что-то пошло не так");
+            System.exit(1);
+        }
+    }
+
+    private void mainLoop() {
+        int choice;
+
+        System.out.println("Что сделать: ");
+        System.out.println("1. Добаивть запись ");
+        System.out.println("2. Изменть запись ");
+        System.out.println("3. Удалить запись ");
+
+        System.out.print(">: ");
+        choice = sc.nextInt();
+
+        if (choice == 1) {
+            String url;
+            String login;
+            String password;
+
+            System.out.println("Введите url: ");
+            url = sc.next();
+
+            System.out.println("Введите логин: ");
+            login = sc.next();
+
+            System.out.println("Введите пароль: ");
+            password = sc.next();
+
+            DataPackage pack = new DataPackage(
+                    url,
+                    login,
+                    password
+            );
+
+            try {
+                System.out.println("sending...");
+                sendPackage(pack);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

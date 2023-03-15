@@ -1,5 +1,7 @@
 # Folders
 /.idea/
+/DataBase/users_db/
 
 # Files
 /DataBase/users.db
+

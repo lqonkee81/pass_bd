@@ -12,7 +12,7 @@ public class PasswordDBHandler {
     private Connection connection;
 
     PasswordDBHandler(String login) {
-        String path = "DataBase/users_bd/" + login + ".db";
+        String path = "DataBase/users_db/" + login + ".db";
 
         try {
             Class.forName("org.sqlite.JDBC");
@@ -22,12 +22,12 @@ public class PasswordDBHandler {
                     " url TEXT NOT NULL,\n" +
                     " login TEXT NOT NULL,\n" +
                     " password TEXT NOT NULL,\n" +
-                    " last_update_time TEXT NOT NULL,\n" +
+                    " last_update_time TEXT NOT NULL\n" +
                     ");";
 
 
             Statement statement = connection.createStatement();
-            statement.execute(request);
+            statement.executeUpdate(request);
 
         } catch (Exception e) {
             e.printStackTrace();

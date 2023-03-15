@@ -21,7 +21,7 @@ public class AuthorizationPackage extends Package implements Serializable {
 
     @Override
     public String toString() {
-        return (super.toString() + login);
+        return (super.toString() + " " + login);
     }
 }
 

@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -20,8 +21,12 @@ public class ClientHandler implements Runnable {
 
     private String login;
 
+    private boolean isAuthorized;
+
     public ClientHandler(Socket socket, Server server) {
         System.out.println("Client has been connected!");
+
+        isAuthorized = false;
 
         dbHandler = new DataBaseHandler();
 
@@ -65,25 +70,43 @@ public class ClientHandler implements Runnable {
     }
 
     private void listener() {
-        Package pack = recievePackage();
+        while (true) {
+            Package pack = recievePackage();
+            PackageType type = pack.getType();
 
-        PackageType type = pack.getType();
-        switch (type) {
-            case REGISTRATION:
-                RegistrationPackage rgp = (RegistrationPackage) pack;
-                registration(rgp);
-                break;
+            switch (type) {
+                case REGISTRATION:
+                    RegistrationPackage rgp = (RegistrationPackage) pack;
+                    System.out.println(rgp);
+                    registration(rgp);
+                    break;
 
-            case AUTHORIZATION:
-                AuthorizationPackage autPack = (AuthorizationPackage) pack;
-                autorization(autPack);
-                break;
+                case AUTHORIZATION:
+                    AuthorizationPackage autPack = (AuthorizationPackage) pack;
+                    System.out.println(pack);
+                    autorization(autPack);
+                    break;
 
-            case ADD_AUTHORIZE_DATA:
-                break;
+                case ADD_AUTHORIZE_DATA:
+                    if (isAuthorized) {
+                        DataPackage aadp = (DataPackage) pack;
+                        System.out.println(aadp);
 
-            default:
-                System.out.println(pack);
+                        addAutorizationData(
+                                aadp.getUrl(),
+                                aadp.getLogin(),
+                                aadp.getPassword()
+                        );
+                    }
+                    break;
+
+                default:
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+            }
         }
     }
 
@@ -94,10 +117,11 @@ public class ClientHandler implements Runnable {
 
             return pac;
 
+        } catch (SocketException e) {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new Package(PackageType.SERVICE_ERROR);
+        return new Package(PackageType.EMPTY);
     }
 
     private void sendPackage(Package pac) {
@@ -125,6 +149,7 @@ public class ClientHandler implements Runnable {
             this.login = rgp.getLoggin();
 
             sendPackage(new PackageAccept());
+            isAuthorized = true;
 
         } catch (SQLException | NoSuchAlgorithmException e) {
             sendPackage(new PackageError());
@@ -138,10 +163,12 @@ public class ClientHandler implements Runnable {
 
             if (dbHandler.checkUser(pack.getLogin(), hashedPassword)) {
                 sendPackage(new PackageAccept());
+                this.login = pack.getLogin();
+                isAuthorized = true;
             } else {
                 sendPackage(new PackageError());
             }
-        } catch (SQLException | NoSuchAlgorithmException e) {
+        } catch (SQLException | NoSuchAlgorithmException | NullPointerException e) {
             sendPackage(new PackageError());
             e.printStackTrace();
         }
@@ -150,5 +177,15 @@ public class ClientHandler implements Runnable {
     private void addAutorizationData(String url, String login, String password) {
         PasswordDBHandler dbHand = new PasswordDBHandler(this.login);
 
+        try {
+            dbHand.addRow(
+                    url,
+                    login,
+                    password
+            );
+        } catch (SQLException e) {
+            sendPackage(new PackageError());
+            e.printStackTrace();
+        }
     }
 }
