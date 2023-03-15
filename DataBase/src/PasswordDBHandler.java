@@ -6,6 +6,7 @@
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class PasswordDBHandler {
@@ -35,6 +36,10 @@ public class PasswordDBHandler {
     }
 
     public void addRow(String url, String login, String password) throws SQLException {
+        /*
+         * Добавдение записи в базу данных с паролями пользователя
+         * */
+
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
         java.util.Date date = new Date(System.currentTimeMillis());
         String format_date = formatter.format(date); // Уже отформатированное время и дата
@@ -47,10 +52,33 @@ public class PasswordDBHandler {
     }
 
     public void deleteRow(String url) throws SQLException {
+        /*
+         * Удаление записи из базы данных с паролями пользователя
+         * */
+
         String request = "DELETE FROM data WHERE url = ?;";
 
         PreparedStatement statement = connection.prepareStatement(request);
         statement.setString(1, url);
         statement.executeUpdate();
+    }
+
+    public ArrayList<String> getFullDataBase() throws SQLException {
+        /*
+         * Считывает всю базу данных пользователя
+         * */
+
+        String request = "SELECT * FROM data";
+
+        Statement statement = connection.createStatement();
+        ResultSet result = statement.executeQuery(request);
+
+        ArrayList<String> urls = new ArrayList<>();
+
+        while (result.next()) {
+            urls.add(result.getString(1));
+        }
+
+        return urls;
     }
 }

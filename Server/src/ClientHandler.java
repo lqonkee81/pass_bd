@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class ClientHandler implements Runnable {
     private Encryption enc;
@@ -46,7 +47,7 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         exchangeKeys();
-        listener();
+        controller();
     }
 
     private void exchangeKeys() {
@@ -69,7 +70,11 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void listener() {
+    private void controller() {
+        /*
+         * Обрабатывает принимаемые пакеты
+         * */
+
         while (true) {
             Package pack = recievePackage();
             PackageType type = pack.getType();
@@ -108,6 +113,11 @@ public class ClientHandler implements Runnable {
                         delAuthorizeData(dadp.getUrl());
                     }
 
+                case GET_FULL_DATA_BASE:
+                    if (isAuthorized) {
+                        sendAllDataBase();
+                    }
+
                 default:
                     try {
                         Thread.sleep(300);
@@ -119,6 +129,10 @@ public class ClientHandler implements Runnable {
     }
 
     private Package recievePackage() {
+        /*
+         * Принимает и расшифровывает пакет
+         * */
+
         try {
             SendingPackage p = (SendingPackage) objectReader.readObject();
             Package pac = enc.decrypt(p.getData(), selfPrivateKey);
@@ -133,6 +147,10 @@ public class ClientHandler implements Runnable {
     }
 
     private void sendPackage(Package pac) {
+        /*
+         * Шифрует пакет и потправляет пользователю
+         * */
+
         try {
             byte[] sendPack = enc.encrypt(pac, userPublicKey);
             SendingPackage p = new SendingPackage(sendPack);
@@ -147,6 +165,13 @@ public class ClientHandler implements Runnable {
     }
 
     private void registration(RegistrationPackage rgp) {
+        /*
+         * Регистрирует пользователя
+         *
+         * По сути просто записывает логин и хеш пароля
+         * в базу со всеми пользователями
+         * */
+
         try {
             dbHandler.addUser(
                     rgp.getLoggin(),
@@ -166,6 +191,13 @@ public class ClientHandler implements Runnable {
     }
 
     private void autorization(AuthorizationPackage pack) {
+        /*
+         * Проверяет наличие пользователя в базе
+         *
+         * Если пользователь есть, то сравнивает хеши паролей
+         * и принимает решение давать доступ или нет
+         * */
+
         try {
             String hashedPassword = enc.makeHash(pack.getPassword());
 
@@ -183,6 +215,10 @@ public class ClientHandler implements Runnable {
     }
 
     private void addAutorizationData(String url, String login, String password) {
+        /*
+         * Добавдение записи в базу данных с паролями пользователя
+         * */
+
         PasswordDBHandler dbHand = new PasswordDBHandler(this.login);
 
         try {
@@ -200,11 +236,34 @@ public class ClientHandler implements Runnable {
     }
 
     private void delAuthorizeData(String url) {
+        /*
+         * Удаление записи из базы данных с паролями пользователя
+         * */
+
         PasswordDBHandler dbHand = new PasswordDBHandler(this.login);
 
         try {
             dbHand.deleteRow(url);
             sendPackage(new PackageAccept());
+        } catch (SQLException e) {
+            sendPackage(new PackageError());
+            e.printStackTrace();
+        }
+    }
+
+    private void sendAllDataBase() {
+        /*
+         * Отпроавляет всю базу данных пользователю
+         * */
+
+        PasswordDBHandler dbHand = new PasswordDBHandler(this.login);
+
+        try {
+            ArrayList<String> urls = dbHand.getFullDataBase();
+
+            DataPackage pack = new DataPackage(urls, PackageType.GET_FULL_DATA_BASE);
+
+            sendPackage(pack);
         } catch (SQLException e) {
             sendPackage(new PackageError());
             e.printStackTrace();

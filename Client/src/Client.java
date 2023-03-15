@@ -3,6 +3,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Client {
@@ -62,6 +63,11 @@ public class Client {
     }
 
     private boolean checkResponse() {
+        /*
+         * Проверяет ответ от сервера
+         * ( либо все збс, либо хуева )
+         * */
+
         PackageType responseType = recievePackage().getType();
 
         if (responseType.equals(PackageType.SERVICE_ACCEPT)) {
@@ -72,6 +78,10 @@ public class Client {
     }
 
     private Package recievePackage() {
+        /*
+         * Принимает и расшифровывает пакет
+         * */
+
         try {
             SendingPackage p = (SendingPackage) reader.readObject();
             Package pac = enc.decrypt(p.getData(), selfPrivateKey);
@@ -85,6 +95,10 @@ public class Client {
     }
 
     private void sendPackage(Package pac) throws Exception {
+        /*
+         * Шифрует пакет и потправляет серверу
+         * */
+
         byte[] sendingPackage = enc.encrypt(pac, serverPublicKey);
 
         SendingPackage p = new SendingPackage(sendingPackage);
@@ -146,6 +160,8 @@ public class Client {
     private void registration() throws Exception {
         /*
          * Регистрация нового аккаунта
+         *
+         * Так же запускает главный цикл приложения
          * */
 
         String login;
@@ -183,6 +199,12 @@ public class Client {
     }
 
     private void authorization() {
+        /*
+         * Авторизация уже существующего аккаунта
+         *
+         * Так же запускает главыный цикл приложения
+         * */
+
         String login;
         String password;
 
@@ -210,26 +232,39 @@ public class Client {
     }
 
     private void mainLoop() {
-        int choice;
+        while (true) {
+            int choice;
 
-        System.out.println("Что сделать: ");
-        System.out.println("1. Добаивть запись ");
-        System.out.println("2. Изменть запись ");
-        System.out.println("3. Удалить запись ");
+            System.out.println("\nЧто сделать: ");
+            System.out.println("1. Получить всю базу данных");
+            System.out.println("2. Добавить запись");
+            System.out.println("3. Удалить запись");
+            System.out.println("4. Изменть запись");
 
-        System.out.print(">: ");
-        choice = sc.nextInt();
+            System.out.print(">: ");
+            choice = sc.nextInt();
 
-        switch (choice) {
-            case 1:
-                addAuthorizeData();
+            switch (choice) {
+                case 1:
+                    getFullDataBase();
+                    break;
 
-            case 2:
-                delAuthorizeData();
+                case 2:
+                    addAuthorizeData();
+                    break;
+
+                case 3:
+                    delAuthorizeData();
+                    break;
+            }
         }
     }
 
     private void addAuthorizeData() {
+        /*
+         * Добавдение записи в базу данных с паролями пользователя
+         * */
+
         String url;
         String login;
         String password;
@@ -265,6 +300,10 @@ public class Client {
     }
 
     private void delAuthorizeData() {
+        /*
+         * Удаление записи из базы данных с паролями пользователя
+         * */
+
         String del_url;
 
         System.out.println("Введите url: ");
@@ -283,5 +322,26 @@ public class Client {
         } catch (Exception e) {
             System.err.println("Что-то пошло не так");
         }
+    }
+
+    private void getFullDataBase() {
+        DataPackage pack = new DataPackage(PackageType.GET_FULL_DATA_BASE);
+
+        try {
+            sendPackage(pack);
+            Thread.sleep(1500);
+        } catch (Exception e) {
+            System.err.println("Что-то пошло не так");
+            e.printStackTrace();
+        }
+
+        DataPackage dataBase = (DataPackage) recievePackage();
+        ArrayList<String> urls = (ArrayList<String>) dataBase.getObject();
+
+        System.out.println("\n\nВсе записи: ");
+        for (String url : urls) {
+            System.out.println(url);
+        }
+        System.out.println("\n\n");
     }
 }

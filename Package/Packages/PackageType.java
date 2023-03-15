@@ -17,5 +17,6 @@ public enum PackageType {
     DELETE_AUTHORIZE_DATA,
     SERVICE_ERROR,
     SERVICE_ACCEPT,
-    EMPTY
+    EMPTY,
+    GET_FULL_DATA_BASE
 }

@@ -5,12 +5,15 @@ public class DataPackage extends Package implements Serializable {
     private String login;
     private String password;
 
+    private Object object;
+
     DataPackage(String url, String login, String password, PackageType type) {
         super(type);
 
         this.url = url;
         this.login = login;
         this.password = password;
+        this.object = null;
     }
 
     DataPackage(String url, PackageType type) {
@@ -19,6 +22,17 @@ public class DataPackage extends Package implements Serializable {
         this.url = url;
         this.login = null;
         this.password = null;
+        this.object = null;
+    }
+
+    DataPackage(Object object, PackageType type) {
+        super(type);
+
+        this.object = object;
+    }
+
+    DataPackage(PackageType type) {
+        super(type);
     }
 
     public String getUrl() {
@@ -31,6 +45,10 @@ public class DataPackage extends Package implements Serializable {
 
     public String getPassword() {
         return password;
+    }
+
+    public Object getObject() {
+        return object;
     }
 
     @Override
