@@ -112,6 +112,25 @@ public class ClientHandler implements Runnable {
 
                         delAuthorizeData(dadp.getUrl());
                     }
+                    break;
+
+                case MODIFY_AUTHORIZE_DATA:
+                    if (isAuthorized) {
+                        DataPackage dadp = (DataPackage) pack;
+                        System.out.println(dadp);
+
+                        updatePassword(dadp.getUrl(), dadp.getPassword());
+                    }
+                    break;
+
+                case GET_AUTHORIZE_DATA:
+                    if (isAuthorized) {
+                        DataPackage dadp = (DataPackage) pack;
+                        System.out.println(dadp);
+
+                        sendAuthorizeData(dadp.getUrl());
+                    }
+                    break;
 
                 case GET_FULL_DATA_BASE:
                     if (isAuthorized) {
@@ -146,6 +165,7 @@ public class ClientHandler implements Runnable {
         return new Package(PackageType.EMPTY);
     }
 
+
     private void sendPackage(Package pac) {
         /*
          * Шифрует пакет и потправляет пользователю
@@ -163,6 +183,7 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         }
     }
+
 
     private void registration(RegistrationPackage rgp) {
         /*
@@ -190,6 +211,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
+
     private void autorization(AuthorizationPackage pack) {
         /*
          * Проверяет наличие пользователя в базе
@@ -214,6 +236,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
+
     private void addAutorizationData(String url, String login, String password) {
         /*
          * Добавдение записи в базу данных с паролями пользователя
@@ -235,6 +258,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
+
     private void delAuthorizeData(String url) {
         /*
          * Удаление записи из базы данных с паролями пользователя
@@ -247,6 +271,31 @@ public class ClientHandler implements Runnable {
             sendPackage(new PackageAccept());
         } catch (SQLException e) {
             sendPackage(new PackageError());
+            e.printStackTrace();
+        }
+    }
+
+
+    private void updatePassword(String url, String password) {
+        PasswordDBHandler dbHand = new PasswordDBHandler(this.login);
+
+        try {
+            dbHand.updatePassword(url, password);
+            sendPackage(new PackageAccept());
+        } catch (SQLException e) {
+            sendPackage(new PackageError());
+            e.printStackTrace();
+        }
+    }
+
+    private void sendAuthorizeData(String url) {
+        PasswordDBHandler dbHand = new PasswordDBHandler(this.login);
+
+        try {
+            ArrayList<String> data = dbHand.getAuthorizeData(url);
+
+            sendPackage(new DataPackage(data, PackageType.GET_AUTHORIZE_DATA));
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }

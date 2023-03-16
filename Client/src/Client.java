@@ -240,6 +240,7 @@ public class Client {
             System.out.println("2. Добавить запись");
             System.out.println("3. Удалить запись");
             System.out.println("4. Изменть запись");
+            System.out.println("5. Получить запись");
 
             System.out.print(">: ");
             choice = sc.nextInt();
@@ -255,6 +256,14 @@ public class Client {
 
                 case 3:
                     delAuthorizeData();
+                    break;
+
+                case 4:
+                    updatePassword();
+                    break;
+
+                case 5:
+                    getAuthorizeData();
                     break;
             }
         }
@@ -277,6 +286,10 @@ public class Client {
 
         System.out.println("Введите пароль: ");
         password = sc.next();
+
+        if (password.equals("_")) {
+            password = RandomPasswordGenerator.genPass();
+        }
 
         DataPackage pack = new DataPackage(
                 url,
@@ -343,5 +356,56 @@ public class Client {
             System.out.println(url);
         }
         System.out.println("\n\n");
+    }
+
+    private void updatePassword() {
+        String url;
+        String password;
+
+        System.out.println("Введите url");
+        url = sc.next();
+
+        System.out.println("Введите пароль");
+        password = sc.next();
+
+        if (password.equals("_")) {
+            password = RandomPasswordGenerator.genPass();
+        }
+
+        DataPackage pack = new DataPackage(url, password, PackageType.MODIFY_AUTHORIZE_DATA);
+
+        try {
+            sendPackage(pack);
+
+            if (checkResponse()) {
+                System.out.println("Сделано!");
+            } else {
+                System.err.println("Что-то пошшло не так");
+            }
+        } catch (Exception e) {
+            System.err.println("Что-то пошшло не так");
+        }
+    }
+
+    private void getAuthorizeData() {
+        System.out.print("Введите url: ");
+        String url = sc.next();
+
+        try {
+            sendPackage(new DataPackage(
+                    url,
+                    PackageType.GET_AUTHORIZE_DATA));
+
+            DataPackage pack = (DataPackage) recievePackage();
+
+            ArrayList<String> data = (ArrayList<String>) pack.getObject();
+
+            for (String s : data) {
+                System.out.println(s);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Что-то пошло не так");
+        }
     }
 }

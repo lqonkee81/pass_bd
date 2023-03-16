@@ -25,6 +25,14 @@ public class DataPackage extends Package implements Serializable {
         this.object = null;
     }
 
+    DataPackage(String url, String password, PackageType type) {
+        super(type);
+
+        this.url = url;
+        this.password = password;
+
+    }
+
     DataPackage(Object object, PackageType type) {
         super(type);
 

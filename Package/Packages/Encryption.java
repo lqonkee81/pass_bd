@@ -6,7 +6,6 @@
 
 import javax.crypto.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
 
 public class Encryption {

@@ -63,6 +63,32 @@ public class PasswordDBHandler {
         statement.executeUpdate();
     }
 
+    public void updatePassword(String url, String password) throws SQLException {
+        String request = "UPDATE data SET password = '" + password + "' WHERE url = ?;";
+
+        PreparedStatement statement = connection.prepareStatement(request);
+        statement.setString(1, url);
+        statement.executeUpdate();
+    }
+
+    public ArrayList<String> getAuthorizeData(String url) throws SQLException {
+        String request = "SELECT * FROM data WHERE url = '" + url + "';";
+
+//        PreparedStatement statement = connection.prepareStatement(request);
+//        statement.setString(1, url);
+
+        Statement statement = connection.createStatement();
+        ResultSet result = statement.executeQuery(request);
+
+        ArrayList<String> data = new ArrayList<>();
+
+        data.add(result.getString(1));
+        data.add(result.getString(2));
+        data.add(result.getString(3));
+
+        return data;
+    }
+
     public ArrayList<String> getFullDataBase() throws SQLException {
         /*
          * Считывает всю базу данных пользователя
@@ -76,7 +102,7 @@ public class PasswordDBHandler {
         ArrayList<String> urls = new ArrayList<>();
 
         while (result.next()) {
-            urls.add(result.getString(1));
+            urls.add(new String(result.getString(1) + "\t(Последнее обновление: " + result.getString(4) + ")"));
         }
 
         return urls;
