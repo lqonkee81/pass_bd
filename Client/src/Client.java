@@ -118,7 +118,7 @@ public class Client {
         writer.flush();
 
         serverPublicKey = (PublicKey) reader.readObject();
-        System.out.println("Client public key: " + serverPublicKey);
+//        System.out.println("Client public key: " + serverPublicKey);
     }
 
     private void authorize() {

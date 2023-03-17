@@ -60,7 +60,7 @@ public class ClientHandler implements Runnable {
 
         try {
             userPublicKey = (PublicKey) objectReader.readObject();
-            System.out.println("Client public key: " + userPublicKey);
+//            System.out.println("Client public key: " + userPublicKey);
 
             objectWriter.writeObject(selfPublickKey);
             objectWriter.flush();
