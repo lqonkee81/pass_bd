@@ -13,20 +13,21 @@ public class ClientHandler implements Runnable {
     private PublicKey userPublicKey;
     private final PublicKey selfPublickKey;
     private final PrivateKey selfPrivateKey;
+    private final Socket socket;
 
     private ObjectOutputStream objectWriter;
     private ObjectInputStream objectReader;
 
     private DataBaseHandler dbHandler;
-    private PasswordDBHandler passwordsDB;
 
     private String login;
 
     private boolean isAuthorized;
 
-    public ClientHandler(Socket socket, Server server) {
+    public ClientHandler(Socket socket) {
         System.out.println("Client has been connected!");
 
+        this.socket = socket;
         isAuthorized = false;
 
         dbHandler = new DataBaseHandler();
@@ -158,7 +159,12 @@ public class ClientHandler implements Runnable {
 
             return pac;
 
-        } catch (SocketException | EOFException e) {
+        } catch (SocketException e) {
+            try {
+                socket.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
